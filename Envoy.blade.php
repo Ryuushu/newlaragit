@@ -86,6 +86,7 @@ $branch = $branch ?? 'master';
     ln -nfs {{ $new_release_dir }} {{ $app_dir }}/current
 
     echo "Restart services"
+    cd {{ $new_release_dir }}
     php artisan queue:restart || true
 @endtask
 
