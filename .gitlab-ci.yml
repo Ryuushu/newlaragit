@@ -36,6 +36,4 @@ deploy:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H 192.168.56.102 >> ~/.ssh/known_hosts
     # Jalankan Envoy deployment
-    - php vendor/bin/envoy run deploy --branch=$CI_COMMIT_REF_NAME
-  only:
-    - main          # Hanya jalankan deploy di branch main (bisa ganti master atau production)
+    - php vendor/bin/envoy run deploy --branch=$CI_COMMIT_REF_NAME          # Hanya jalankan deploy di branch main (bisa ganti master atau production)
