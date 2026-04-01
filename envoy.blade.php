@@ -1,45 +1,104 @@
 @servers(['web' => 'gitdep@192.168.56.102'])
 
 @setup
-$repository = 'git clone git@192.168.56.102:nixie/newlara.git';
-$releases_dir = '/var/www/app/releases';
 $app_dir = '/var/www/app';
+$repo_dir = $app_dir.'/repo';
+$releases_dir = $app_dir.'/releases';
 $release = date('YmdHis');
 $new_release_dir = $releases_dir.'/'.$release;
+$branch = $branch ?? 'main';
 @endsetup
 
 
 @story('deploy')
-    clone_repository
+    pull_repository
+    prepare_release
     run_composer
-    update_symlinks
+    run_laravel
+    update_symlink
+    cleanup
 @endstory
 
 
-@task('clone_repository')
-    echo 'Cloning repository'
-    [ -d {{ $releases_dir }} ] || mkdir {{ $releases_dir }}
-    git clone --depth 1 {{ $repository }} {{ $new_release_dir }}
-    cd {{ $new_release_dir }}
-    git reset --hard {{ $commit }}
+# ========================
+# 1. PULL TERBARU
+# ========================
+@task('pull_repository')
+    echo "Pull latest code"
+
+    if [ ! -d "{{ $repo_dir }}" ]; then
+        echo "Cloning repo first time"
+        git clone git@192.168.56.102:nixie/newlara.git {{ $repo_dir }}
+    fi
+
+    cd {{ $repo_dir }}
+    git fetch origin
+    git checkout {{ $branch }}
+    git reset --hard origin/{{ $branch }}
 @endtask
 
 
+# ========================
+# 2. COPY KE RELEASE BARU
+# ========================
+@task('prepare_release')
+    echo "Preparing release {{ $release }}"
+
+    mkdir -p {{ $releases_dir }}
+    cp -r {{ $repo_dir }} {{ $new_release_dir }}
+@endtask
+
+
+# ========================
+# 3. COMPOSER
+# ========================
 @task('run_composer')
-    echo "Starting deployment ({{ $release }})"
+    echo "Install dependencies"
+
     cd {{ $new_release_dir }}
-    composer install --prefer-dist --no-scripts -q -o
+    composer install --no-dev --optimize-autoloader
 @endtask
 
 
-@task('update_symlinks')
-    echo 'Linking storage directory'
+# ========================
+# 4. LARAVEL SETUP
+# ========================
+@task('run_laravel')
+    echo "Laravel optimization"
+
+    cd {{ $new_release_dir }}
+
+    php artisan migrate --force
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+@endtask
+
+
+# ========================
+# 5. ZERO DOWNTIME SWITCH
+# ========================
+@task('update_symlink')
+    echo "Link storage & env"
+
     rm -rf {{ $new_release_dir }}/storage
     ln -nfs {{ $app_dir }}/storage {{ $new_release_dir }}/storage
-
-    echo 'Linking .env file'
     ln -nfs {{ $app_dir }}/.env {{ $new_release_dir }}/.env
 
-    echo 'Linking current release'
+    echo "Switching current release (ZERO DOWNTIME)"
     ln -nfs {{ $new_release_dir }} {{ $app_dir }}/current
+
+    echo "Restart services"
+    php artisan queue:restart || true
+@endtask
+
+
+# ========================
+# 6. CLEANUP
+# ========================
+@task('cleanup')
+    echo "Cleaning old releases"
+
+    cd {{ $releases_dir }}
+    ls -dt */ | tail -n +6 | xargs rm -rf
 @endtask
