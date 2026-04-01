@@ -24,11 +24,19 @@ test_job:
 # ========================
 # DEPLOY
 # ========================
-deploy_job:
+deploy:
   stage: deploy
+  image: php:8.4-cli
+
+  before_script:
+    - apt-get update && apt-get install -y git unzip openssh-client
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install
+
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H 192.168.56.102 >> ~/.ssh/known_hosts
+
   script:
-    - ssh $SERVER_USER@$SERVER_IP "
-        cd /var/www/project &&
-        git pull origin main &&
-        php artisan migrate --force
-      "
+    - php vendor/bin/envoy run deploy --branch=$CI_COMMIT_REF_NAME
