@@ -6,7 +6,7 @@ $repo_dir = $app_dir.'/repo';
 $releases_dir = $app_dir.'/releases';
 $release = date('YmdHis');
 $new_release_dir = $releases_dir.'/'.$release;
-$branch = $branch ?? 'main';
+$branch = $branch ?? 'master';
 @endsetup
 
 
@@ -26,12 +26,8 @@ $branch = $branch ?? 'main';
 @task('pull_repository')
     echo "Pull latest code"
 
-    if [ ! -d "{{ $repo_dir }}" ]; then
-        echo "Cloning repo first time"
-        git clone git@192.168.56.102:nixie/newlara.git {{ $repo_dir }}
-    fi
-
     cd {{ $repo_dir }}
+
     git fetch origin
     git checkout {{ $branch }}
     git reset --hard origin/{{ $branch }}
