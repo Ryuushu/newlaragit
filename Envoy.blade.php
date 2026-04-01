@@ -1,4 +1,4 @@
-@servers(['web' => 'gitdep@192.168.56.102'])
+@servers(['web' => 'gitserver'])
 
 @setup
 $app_dir = '/var/www/app';
