@@ -2,7 +2,7 @@
 
 @setup
 $app_dir = '/var/www/app';
-$repo_dir = $app_dir.'/repo';
+$repo_dir = $app_dir.'/../newlara';
 $releases_dir = $app_dir.'/releases';
 $release = date('YmdHis');
 $new_release_dir = $releases_dir.'/'.$release;
