@@ -1,0 +1,30 @@
+name: Deploy Laravel via Rsync
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Sync Files with Rsync
+        run: |
+          rsync -av --no-perms --exclude='.env' --exclude='.git' . /var/www/laravel-live/
+
+      - name: Post-Deployment Commands
+        run: |
+          cd /var/www/laravel-live
+          
+          # Hapus cache view supaya tidak bentrok dengan file lama milik user lain
+          rm -rf storage/framework/views/*.php
+          
+          composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
+          php artisan migrate --force || echo "Nothing to migrate"
+          
+          # Pakai 'sudo' di sini HANYA JIKA kamu sudah setting NOPASSWD di visudo seperti sebelumnya
+          # Jika tidak, hapus kata 'sudo' di bawah ini:
+          chmod -R 775 storage bootstrap/cache
