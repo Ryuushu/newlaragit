@@ -15,13 +15,10 @@ before_script:
 test_job:
   stage: test
   tags:
-    - deploy 
+    - deploy
   script:
     - echo "Run PHPUnit"
     - ./vendor/bin/phpunit
-    # Laravel example:
-    # - composer install --no-interaction --prefer-dist
-    # - php artisan test
 
 # ========================
 # DEPLOY
