@@ -13,11 +13,11 @@ jobs:
 
       - name: Sync Files with Rsync
         run: |
-          rsync -av --no-perms --exclude='.env' --exclude='.git' . /var/www/laravel-live/
+          rsync -av --no-perms --exclude='.env' --exclude='.git' . /var/www/newlaragit/
 
       - name: Post-Deployment Commands
         run: |
-          cd /var/www/laravel-live
+          cd /var/www/newlaragit
           
           # Hapus cache view supaya tidak bentrok dengan file lama milik user lain
           rm -rf storage/framework/views/*.php
