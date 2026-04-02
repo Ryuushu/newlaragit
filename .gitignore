@@ -13,3 +13,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+# Laravel build & assets
+builds/
+public/css/
+public/js/
+public/mix-manifest.json
